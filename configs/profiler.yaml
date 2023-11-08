@@ -1,0 +1,8 @@
+trainer:
+  profiler:
+    class_path: source.cli.PPSProfiler
+    init_args:
+      export_to_chrome: False
+      emit_nvtx: False
+      with_stack: False
+

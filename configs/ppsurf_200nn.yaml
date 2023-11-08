@@ -1,0 +1,9 @@
+trainer:
+  default_root_dir: 'models/ppsurf_200nn'
+
+model:
+  init_args:
+    name: 'ppsurf_200nn'
+    num_pts_local: 200
+    rec_batch_size: 25000
+

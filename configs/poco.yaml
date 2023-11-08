@@ -1,0 +1,77 @@
+debug: False
+seed_everything: 42
+
+trainer:
+  max_epochs: 150
+  default_root_dir: 'models/poco'
+  strategy: auto
+  accelerator: gpu
+  devices: -1
+  precision: 16-mixed
+  num_sanity_val_steps: 0
+  log_every_n_steps: 1
+  logger:
+    class_path: pytorch_lightning.loggers.TensorBoardLogger
+    init_args:
+      save_dir: 'models'
+  callbacks:
+  - class_path: source.cli.PPSProgressBar
+  - class_path: LearningRateMonitor
+    init_args:
+      logging_interval: step
+  - class_path: ModelCheckpoint
+    init_args:
+      save_last: True
+      save_top_k: 0
+
+data:
+  class_path: source.poco_data_loader.PocoDataModule
+  init_args:
+    use_ddp: False
+    in_file: datasets/abc_train/testset.txt
+    padding_factor: 0.05
+    seed: 42
+    manifold_points: 10000
+    patches_per_shape: -1
+    do_data_augmentation: True
+    batch_size: 10
+    workers: 8
+
+model:
+  class_path: source.poco_model.PocoModel
+  init_args:
+    output_names:
+      - 'imp_surf_sign'
+    in_channels: 3
+    out_channels: 2
+    k: 64
+    network_latent_size: 32
+    gen_subsample_manifold_iter: 10
+    gen_subsample_manifold: 10000
+    gen_resolution_global: 257
+    rec_batch_size: 50000
+    gen_refine_iter: 10
+    workers: 8
+    lambda_l1: 0.0
+    results_dir: 'results'
+    name: 'poco'
+    debug: False
+
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 0.001
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1e-5
+    weight_decay: 1e-2
+    amsgrad: False
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.MultiStepLR
+  init_args:
+    milestones:
+    - 75
+    - 125
+    gamma: 0.1

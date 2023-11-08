@@ -1,0 +1,8 @@
+trainer:
+  default_root_dir: 'models/ppsurf_100nn'
+
+model:
+  init_args:
+    name: 'ppsurf_100nn'
+    num_pts_local: 100
+

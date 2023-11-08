@@ -1,0 +1,33 @@
+name: pps
+channels:
+  - pytorch
+  - nvidia
+  - anaconda
+  - conda-forge
+  - pyg
+  - defaults
+dependencies:
+  - python>=3.11
+  - pytorch=2
+  - pytorch-cuda
+  - pytorch-lightning=2
+  - pyg=2
+  - pytorch-cluster=1
+  - scikit-learn-intelex
+  - numpy=1
+  - scikit-image=0
+  - scipy=1
+  - pandas=1
+  - openpyxl=
+  - overrides=7
+  - pykdtree=1
+  - laspy=2
+  - pip>=22
+  - pillow
+  - intel-openmp
+  - tqdm
+  - pip:
+    - tensorboard>=2.14
+    - trimesh>=3.23
+    - pysdf>=0.1
+    - jsonargparse[signatures]>=4.7

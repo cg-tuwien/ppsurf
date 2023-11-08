@@ -1,0 +1,13 @@
+trainer:
+  default_root_dir: 'models/ppsurf'
+
+model:
+  class_path: source.ppsurf_model.PPSurfModel
+  init_args:
+    network_latent_size: 256
+    num_pts_local: 50
+    pointnet_latent_size: 256
+    debug: False
+    
+data:
+  class_path: source.ppsurf_data_loader.PPSurfDataModule

@@ -1,0 +1,13 @@
+trainer:
+  default_root_dir: 'models/poco_mini'
+
+model:
+  init_args:
+    name: 'poco_mini'
+    gen_resolution_global: 129  # half resolution
+    rec_batch_size: 25000  # half memory
+
+data:
+  init_args:
+    in_file: datasets/abc_minimal/testset.txt  # small dataset
+    batch_size: 10  # 16 GB GPU memory

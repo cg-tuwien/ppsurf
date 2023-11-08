@@ -1,0 +1,13 @@
+trainer:
+  strategy: ddp
+  # strategy: ddp_find_unused_parameters_true
+
+model:
+  init_args:
+    workers: &num_workers 48
+
+data:
+  init_args:
+    use_ddp: True
+    workers: *num_workers
+    batch_size: 12  # 50 / 4 = 12.5
