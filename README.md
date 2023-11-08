@@ -25,8 +25,7 @@ Alternatively, you can install the required packages with conda by simply replac
 Finally, you can use Pip with the requirements.txt.
 
 ``` bash
-# clone this repo
-# a minimal dataset is included (2 shapes for training, 1 for evaluation)
+# clone this repo, a minimal dataset is included
 git clone https://github.com/ErlerPhilipp/ppsurf.git
 
 # go into the cloned dir
