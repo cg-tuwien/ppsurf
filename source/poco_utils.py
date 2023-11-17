@@ -53,9 +53,6 @@ def export_mesh_and_refine_vertices_region_growing_v3(
     bmax = input_points.max()
 
     step = (bmax - bmin) / (resolution - 1)
-    res_x = resolution
-    res_y = resolution
-    res_z = resolution
 
     bmin_pad = bmin - padding * step
     bmax_pad = bmax + padding * step
@@ -66,23 +63,6 @@ def export_mesh_and_refine_vertices_region_growing_v3(
     if num_pts_local is not None:
         pts_raw_ms = pts_raw_ms[0].detach().cpu().numpy()  # expect batch size = 1
         kdtree = make_kdtree(pts=pts_raw_ms)
-
-    def _dilate_binary(arr: np.ndarray, pts_int: np.ndarray):
-        # old POCO version actually dilates with a 4^3 kernel, 2 to lower, 1 to upper
-        # -> no out-of upper bounds with 2 dilation_size by default
-        # we make it symmetric (+1 to max)
-        pts_min = np.maximum(0, pts_int - dilation_size)
-        pts_max = np.minimum(arr.shape[0], pts_int + dilation_size + 1)
-
-        def _dilate_point(pt_min, pt_max):
-            arr[pt_min[0]:pt_max[0],
-            pt_min[1]:pt_max[1],
-            pt_min[2]:pt_max[2]] = True
-
-        # vectorizing slices is not possible? so we iterate over the points
-        # skimage.morphology and scipy.ndimage take longer, probably because of overhead
-        _ = [_dilate_point(pt_min=pts_min[i], pt_max=pts_max[i]) for i in range(pts_int.shape[0])]
-        return arr
 
     def _get_pts_local_ps(pts_query: np.ndarray):
         _, patch_pts_ids = query_kdtree(kdtree=kdtree, pts_query=pts_query, k=num_pts_local, sqr_dists=True)
@@ -101,59 +81,8 @@ def export_mesh_and_refine_vertices_region_growing_v3(
         occ_hat = occ_hat.squeeze(0).detach().cpu().numpy()
         return occ_hat
 
-    # create the volume
-    volume_shape = (res_x + 2 * padding, res_y + 2 * padding, res_z + 2 * padding)
-    volume = np.full(volume_shape, np.nan, dtype=np.float64)
-    mask_to_see = np.full(volume_shape, True, dtype=bool)
-    while pts_ids.shape[0] > 0:
-        # create the mask
-        mask = np.full(volume_shape, False, dtype=bool)
-        mask[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] = True
-        mask = _dilate_binary(arr=mask, pts_int=pts_ids)
-
-        # get the valid points
-        valid_points_coord = np.argwhere(mask).astype(np.float32)
-        valid_points = valid_points_coord * step + bmin_pad
-
-        # get the prediction for each valid points
-        z = []
-        near_surface_samples_torch = torch.tensor(valid_points, dtype=torch.float)
-        for pnts in torch.split(near_surface_samples_torch, num_pts, dim=0):
-
-            latent['pts_query'] = pnts.unsqueeze(0)
-            if num_pts_local is not None:
-                latent['pts_local_ps'] = _get_pts_local_ps(pts_query=pnts.detach().cpu().numpy())
-            z.append(_predict_from_latent(latent))
-
-            prog_bar.predict_progress_bar.set_postfix_str('{}, occ_batch iter {}'.format(os.path.basename(pc_file_in), len(z)), refresh=True)
-
-        z = np.concatenate(z, axis=0)
-        z = z.astype(np.float64)
-
-        # update the volume
-        volume[mask] = z
-
-        # create the masks
-        mask_pos = np.full(volume_shape, False, dtype=bool)
-        mask_neg = np.full(volume_shape, False, dtype=bool)
-        mask_to_see[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] = False
-
-        # dilate
-        pts_ids_pos = pts_ids[volume[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] <= 0]
-        pts_ids_neg = pts_ids[volume[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] >= 0]
-        mask_neg = _dilate_binary(arr=mask_neg, pts_int=pts_ids_pos)
-        mask_pos = _dilate_binary(arr=mask_pos, pts_int=pts_ids_neg)
-
-        # get the new points
-        new_mask = (mask_neg & (volume >= 0) & mask_to_see) | (mask_pos & (volume <= 0) & mask_to_see)
-        pts_ids = np.argwhere(new_mask).astype(np.int64)
-
-    volume[0:padding, :, :] = out_value
-    volume[-padding:, :, :] = out_value
-    volume[:, 0:padding, :] = out_value
-    volume[:, -padding:, :] = out_value
-    volume[:, :, 0:padding] = out_value
-    volume[:, :, -padding:] = out_value
+    volume = _create_volume(_get_pts_local_ps, _predict_from_latent, dilation_size, bmin_pad, latent, num_pts,
+                            num_pts_local, out_value, padding, pc_file_in, prog_bar, pts_ids, resolution, step)
 
     # volume[np.isnan(volume)] = out_value
     maxi = volume[~np.isnan(volume)].max()
@@ -243,6 +172,85 @@ def export_mesh_and_refine_vertices_region_growing_v3(
     source.base.mesh.clean_simple_inplace(mesh=mesh)
     mesh = source.base.mesh.remove_small_connected_components(mesh=mesh, num_faces=6)
     return mesh
+
+
+def _create_volume(_get_pts_local_ps, _predict_from_latent, dilation_size, bmin_pad, latent, num_pts, num_pts_local,
+                   out_value, padding, pc_file_in, prog_bar, pts_ids, resolution, step):
+
+    def _dilate_binary(arr: np.ndarray, pts_int: np.ndarray):
+        # old POCO version actually dilates with a 4^3 kernel, 2 to lower, 1 to upper
+        # -> no out-of upper bounds with 2 dilation_size by default
+        # we make it symmetric (+1 to max)
+        pts_min = np.maximum(0, pts_int - dilation_size)
+        pts_max = np.minimum(arr.shape[0], pts_int + dilation_size + 1)
+
+        def _dilate_point(pt_min, pt_max):
+            arr[pt_min[0]:pt_max[0],
+            pt_min[1]:pt_max[1],
+            pt_min[2]:pt_max[2]] = True
+
+        # vectorizing slices is not possible? so we iterate over the points
+        # skimage.morphology and scipy.ndimage take longer, probably because of overhead
+        _ = [_dilate_point(pt_min=pts_min[i], pt_max=pts_max[i]) for i in range(pts_int.shape[0])]
+        return arr
+
+    res_x = resolution
+    res_y = resolution
+    res_z = resolution
+
+    volume_shape = (res_x + 2 * padding, res_y + 2 * padding, res_z + 2 * padding)
+    volume = np.full(volume_shape, np.nan, dtype=np.float64)
+    mask_to_see = np.full(volume_shape, True, dtype=bool)
+    while pts_ids.shape[0] > 0:
+        # create the mask
+        mask = np.full(volume_shape, False, dtype=bool)
+        mask[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] = True
+        mask = _dilate_binary(arr=mask, pts_int=pts_ids)
+
+        # get the valid points
+        valid_points_coord = np.argwhere(mask).astype(np.float32)
+        valid_points = valid_points_coord * step + bmin_pad
+
+        # get the prediction for each valid points
+        z = []
+        near_surface_samples_torch = torch.tensor(valid_points, dtype=torch.float)
+        for pnts in torch.split(near_surface_samples_torch, num_pts, dim=0):
+
+            latent['pts_query'] = pnts.unsqueeze(0)
+            if num_pts_local is not None:
+                latent['pts_local_ps'] = _get_pts_local_ps(pts_query=pnts.detach().cpu().numpy())
+            z.append(_predict_from_latent(latent))
+
+            prog_bar.predict_progress_bar.set_postfix_str(
+                '{}, occ_batch iter {}'.format(os.path.basename(pc_file_in), len(z)), refresh=True)
+
+        z = np.concatenate(z, axis=0)
+        z = z.astype(np.float64)
+
+        # update the volume
+        volume[mask] = z
+
+        # create the masks
+        mask_pos = np.full(volume_shape, False, dtype=bool)
+        mask_neg = np.full(volume_shape, False, dtype=bool)
+        mask_to_see[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] = False
+
+        # dilate
+        pts_ids_pos = pts_ids[volume[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] <= 0]
+        pts_ids_neg = pts_ids[volume[pts_ids[:, 0], pts_ids[:, 1], pts_ids[:, 2]] >= 0]
+        mask_neg = _dilate_binary(arr=mask_neg, pts_int=pts_ids_pos)
+        mask_pos = _dilate_binary(arr=mask_pos, pts_int=pts_ids_neg)
+
+        # get the new points
+        new_mask = (mask_neg & (volume >= 0) & mask_to_see) | (mask_pos & (volume <= 0) & mask_to_see)
+        pts_ids = np.argwhere(new_mask).astype(np.int64)
+    volume[0:padding, :, :] = out_value
+    volume[-padding:, :, :] = out_value
+    volume[:, 0:padding, :] = out_value
+    volume[:, -padding:, :] = out_value
+    volume[:, :, 0:padding] = out_value
+    volume[:, :, -padding:] = out_value
+    return volume
 
 
 @torch.jit.ignore
