@@ -210,7 +210,7 @@ class OccupancyDataModule(LightningDataModule, ABC):
         elif file_ext in ['.las', '.laz', '.copc', '.crs']:
             import laspy
             las = laspy.read(pts_file)
-            pts = las.points
+            pts = las.xyz
         else:
             raise ValueError('Unknown point cloud type: {}'.format(pts_file))
         return pts
@@ -222,9 +222,6 @@ class OccupancyDataModule(LightningDataModule, ABC):
             pts = pts[:, 0:3]
         else:
             normals = np.zeros_like(pts)
-            
-        if pts.dtype != np.float32:
-            pts = pts.astype(np.float32)
         return pts, normals
         
     @staticmethod
@@ -239,6 +236,14 @@ class OccupancyDataModule(LightningDataModule, ABC):
             bb_center, scale = source.base.math.get_points_normalization_info(
                 pts=pts_np, padding_factor=padding_factor)
             pts_np = source.base.math.normalize_points_with_info(pts=pts_np, bb_center=bb_center, scale=scale)
+
+        # convert only after normalization
+        if pts_np.dtype != np.float32:
+            pts_np = pts_np.astype(np.float32)
+
+        # debug output
+        from source.base.point_cloud import write_ply
+        write_ply('debug/pts_ms.ply', pts_np, normals_np)
 
         shape_data = {'pts_ms': pts_np, 'normals_ms': normals_np, 'pc_file_in': pts_file}
         if return_kdtree:
