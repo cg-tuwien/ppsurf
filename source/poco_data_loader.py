@@ -363,7 +363,7 @@ class PocoDataset(torch_data.Dataset, EnforceOverrides):
         imp_surf_query_filename = os.path.join(query_pts_dir, self.shape_names[shape_ind] + '.ply.npy')
         imp_surf_dist_filename = os.path.join(query_dist_dir, self.shape_names[shape_ind] + '.ply.npy')
 
-        if os.path.isfile(imp_surf_query_filename):  # assume training
+        if os.path.isfile(imp_surf_query_filename):  # if GT data exists
             pts_query_ms = np.load(imp_surf_query_filename)
             if pts_query_ms.dtype != np.float32:
                 pts_query_ms = pts_query_ms.astype(np.float32)
@@ -371,7 +371,7 @@ class PocoDataset(torch_data.Dataset, EnforceOverrides):
             imp_surf_dist_ms = np.load(imp_surf_dist_filename)
             if imp_surf_dist_ms.dtype != np.float32:
                 imp_surf_dist_ms = imp_surf_dist_ms.astype(np.float32)
-        else:  # assume testing
+        else:  # if no GT data
             pts_query_ms = np.empty((0, 3), dtype=np.float32)
             imp_surf_dist_ms = np.empty((0, 3), dtype=np.float32)
 
