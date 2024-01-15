@@ -8,7 +8,7 @@ a network that estimates a signed distance function from point clouds. This SDF 
 
 This is our follow-up work for [Points2Surf](https://www.cg.tuwien.ac.at/research/publications/2020/erler-p2s/).
 It uses parts of [POCO](https://github.com/valeoai/POCO), mainly the network and mesh extraction.
-This work was published in [**TODO**](**TODO**).
+This work was published in [Computer Graphics Forum (Jan 2024)](https://onlinelibrary.wiley.com/doi/10.1111/cgf.15000).
 
 
 ## Setup
@@ -37,12 +37,14 @@ mamba env create --file pps{_win}.yml
 # activate the new environment
 mamba activate pps
 ```
-Use `pps{_win}.yml` for Windows and `pps.yml` for other OS.
+Use `pps_win.yml` for Windows and `pps.yml` for other OS.
 
 Test the setup with the minimal dataset included in the repo:
 ``` bash
 python full_run_pps_mini.py
 ```
+
+On Windows, Pip install may raise a "Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools" error. In this case, install the MS Visual Studio build tools, as described on [Stackoverflow](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst).
 
 
 ## Reconstruct single Point Clouds
@@ -283,7 +285,17 @@ instead of [Scipy KDTree](https://docs.scipy.org/doc/scipy/reference/generated/s
 ## Citation
 If you use our work, please cite our paper:
 ```
-@article{
-TODO
+@article{ppsurf2024,
+author = {Erler, Philipp and Fuentes-Perez, Lizeth and Hermosilla, Pedro and Guerrero, Paul and Pajarola, Renato and Wimmer, Michael},
+title = {PPSurf: Combining Patches and Point Convolutions for Detailed Surface Reconstruction},
+journal = {Computer Graphics Forum},
+volume = {n/a},
+number = {n/a},
+pages = {e15000},
+keywords = {modeling, surface reconstruction},
+doi = {https://doi.org/10.1111/cgf.15000},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15000},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.15000},
+abstract = {Abstract 3D surface reconstruction from point clouds is a key step in areas such as content creation, archaeology, digital cultural heritage and engineering. Current approaches either try to optimize a non-data-driven surface representation to fit the points, or learn a data-driven prior over the distribution of commonly occurring surfaces and how they correlate with potentially noisy point clouds. Data-driven methods enable robust handling of noise and typically either focus on a global or a local prior, which trade-off between robustness to noise on the global end and surface detail preservation on the local end. We propose PPSurf as a method that combines a global prior based on point convolutions and a local prior based on processing local point cloud patches. We show that this approach is robust to noise while recovering surface details more accurately than the current state-of-the-art. Our source code, pre-trained model and dataset are available at https://github.com/cg-tuwien/ppsurf.}
 }
 ```
