@@ -34,7 +34,9 @@ def create_activate_env(env_name: str):
     env_list_str = subprocess.check_output([conda_exe, 'env', 'list', '--json']).decode('utf-8')
     env_list_json = json.loads(env_list_str)
     envs = env_list_json['envs']
-    if env_name not in envs:
+    first_run = env_name not in envs
+    if first_run:
+        import subprocess
         on_windows = os.name == 'nt'
         yml_file = '{}{}.yml'.format(env_name, '_win' if on_windows else '')
         print('Creating conda environment from {}'.format(yml_file))
@@ -42,6 +44,11 @@ def create_activate_env(env_name: str):
 
     # conda activate pps
     subprocess.call([conda_exe, 'activate', env_name])
+
+    if first_run:
+        print('Downloading datasets')
+        subprocess.call(['python', 'source/datasets/download_abc_training.py'])
+        subprocess.call(['python', 'source/datasets/download_testsets.py'])
 
 
 def make_dir_for_file(file):
