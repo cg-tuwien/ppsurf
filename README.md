@@ -1,7 +1,7 @@
 # PPSurf
 Combining Patches and Point Convolutions for Detailed Surface Reconstruction
 
-This is our implementation of [PPSurf **TODO**](https://www.cg.tuwien.ac.at/research/publications/TODO),
+This is our implementation of [PPSurf](https://www.cg.tuwien.ac.at/research/publications/2024/erler_2024_ppsurf/),
 a network that estimates a signed distance function from point clouds. This SDF is turned into a mesh with Marching Cubes.
 
 ![PPSurf teaser](images/teaser.png)
