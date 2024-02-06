@@ -2,8 +2,6 @@ import os
 import argparse
 import sys
 
-import source.occupancy_data_module
-
 sys.path.append(os.path.abspath('.'))
 
 

@@ -4,6 +4,46 @@ import numpy as np
 import os
 
 
+def create_activate_env(env_name: str):
+    import subprocess
+
+    # check if conda is installed
+    def _check_conda_installed(command: str):
+        conda_output = subprocess.check_output([command, '-V']).decode('utf-8').strip()
+        conda_output_regex = r'conda (\d+\.\d+\.\d+)'  # mamba and conda both output 'conda 23.3.1'
+        import re
+        conda_match = re.match(conda_output_regex, conda_output)
+        return conda_match is not None
+
+    if _check_conda_installed('mamba'):
+        conda_exe = 'mamba'
+    elif _check_conda_installed('conda'):
+        conda_exe = 'conda'
+    else:
+        raise ValueError('Conda not found')
+
+    # check if env already exists. example outputs:
+    # conda env list --json
+    # {
+    #   "envs": [
+    #     "C:\\miniforge",
+    #     "C:\\miniforge\\envs\\pps"
+    #   ]
+    # }
+    import json
+    env_list_str = subprocess.check_output([conda_exe, 'env', 'list', '--json']).decode('utf-8')
+    env_list_json = json.loads(env_list_str)
+    envs = env_list_json['envs']
+    if env_name not in envs:
+        on_windows = os.name == 'nt'
+        yml_file = '{}{}.yml'.format(env_name, '_win' if on_windows else '')
+        print('Creating conda environment from {}'.format(yml_file))
+        subprocess.call([conda_exe, 'create', '--file', yml_file, '-y'])
+
+    # conda activate pps
+    subprocess.call([conda_exe, 'activate', env_name])
+
+
 def make_dir_for_file(file):
     file_dir = os.path.dirname(file)
     if file_dir != '':
