@@ -2,11 +2,14 @@ import os
 import os.path
 import typing
 
+# avoid heavy imports at the top level, so they don't get imported in the workers
+if typing.TYPE_CHECKING:
+    import torch
+
 import torch.utils.data as torch_data
 import numpy as np
-import torch
 import trimesh
-from overrides import EnforceOverrides, overrides
+from overrides import EnforceOverrides
 
 from source.occupancy_data_module import OccupancyDataModule, get_training_data_dir
 from source.base.container import dict_np_to_torch
@@ -54,6 +57,7 @@ class PocoDataModule(OccupancyDataModule):
 
 
 def sampling_quantized(pts_batch, ratio=None, n_support=None, support_points=None, support_points_ids=None):
+    # TODO: try without importing torch
     import math
     import torch
     from torch_geometric.transforms import RandomRotate
@@ -95,11 +99,11 @@ def sampling_quantized(pts_batch, ratio=None, n_support=None, support_points=Non
             sampled = []
             vox = vox_size[i]
             while True:
-                #data = Data(pos=pts)
-                # TODO: optimize to one call to linear transformation
+                # TODO: optimize to one call to one linear transformation
                 pts_rot = rot_z(rot_y(rot_x(Data(pos=pts)))).pos.to(pts.dtype)
 
-                c = voxel_grid(pts_rot, batch=torch.zeros(pts_rot.shape[0], device=pts.device, dtype=pts.dtype), size=vox)
+                batch = torch.zeros(pts_rot.shape[0], device=pts.device, dtype=pts.dtype)
+                c = voxel_grid(pts_rot, batch=batch, size=vox)
                 _, perm = consecutive_cluster(c)
 
                 if sampled_count + perm.shape[0] < support_point_number:
@@ -130,8 +134,8 @@ def sampling_quantized(pts_batch, ratio=None, n_support=None, support_points=Non
         raise ValueError(f'Search Quantized - ratio value error {ratio} should be in ]0,1]')
 
 
-def get_fkaconv_ids(data: typing.Dict[str, torch.Tensor], segmentation: bool = True) \
-        -> typing.Dict[str, torch.Tensor]:
+def get_fkaconv_ids(data: typing.Dict[str, 'torch.Tensor'], segmentation: bool = True) \
+        -> typing.Dict[str, 'torch.Tensor']:
     from source.poco_utils import knn
 
     pts = data['pts'].clone()
@@ -205,7 +209,7 @@ def get_fkaconv_ids(data: typing.Dict[str, torch.Tensor], segmentation: bool = T
     return ret_data
 
 
-def get_proj_ids(data: typing.Dict[str, torch.Tensor], k: int) -> typing.Dict[str, torch.Tensor]:
+def get_proj_ids(data: typing.Dict[str, 'torch.Tensor'], k: int) -> typing.Dict[str, 'torch.Tensor']:
     from source.poco_utils import knn
 
     pts = data['pts']
