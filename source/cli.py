@@ -14,27 +14,6 @@ from pytorch_lightning.callbacks import TQDMProgressBar
 from source.base.profiling import get_now_str
 
 
-def get_multi_gpu_params(max_workers: typing.Optional[int] = None) -> List[str]:
-    from torch.cuda import device_count
-
-    num_gpus = device_count()
-    if num_gpus <= 1:
-        return []
-
-    num_workers = os.cpu_count()
-    if max_workers is not None:
-        num_workers = min(num_workers, max_workers)
-
-    return [
-        '--trainer.strategy', 'ddp',
-        # '--trainer.strategy', 'ddp_find_unused_parameters_true',  # for debugging
-        '--model.init_args.workers', str(num_workers),
-        '--data.init_args.use_ddp', True,
-        '--data.init_args.workers', str(num_workers),
-        '--data.init_args.batch_size', str(50 // num_gpus),
-    ]
-
-
 class PPSProgressBar(TQDMProgressBar):  # disable validation prog bar
     def init_validation_tqdm(self):
         bar_disabled = tqdm(disable=True)

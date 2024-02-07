@@ -1,6 +1,4 @@
 import typing
-
-import numpy as np
 import os
 
 
@@ -114,6 +112,7 @@ def call_necessary(file_in: typing.Union[str, typing.Sequence[str]], file_out: t
     if oldest_input_file_mtime >= youngest_output_file_mtime:
         if verbose:
             import time
+            import numpy as np
             input_file_mtime_arg_max = np.argmax(np.array([os.path.getmtime(f) for f in file_in]))
             output_file_mtime_arg_min = np.argmin(np.array([os.path.getmtime(f) for f in file_out]))
             input_file_mtime_max = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(oldest_input_file_mtime))

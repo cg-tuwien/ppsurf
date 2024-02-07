@@ -2,7 +2,7 @@
 
 import os
 from source.base.fs import create_activate_env
-from source.cli import get_multi_gpu_params
+from source.base.mp import get_multi_gpu_params
 
 if __name__ == '__main__':
     create_activate_env('pps')
