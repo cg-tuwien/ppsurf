@@ -7,7 +7,10 @@ def create_activate_env(env_name: str):
 
     # check if conda is installed
     def _check_conda_installed(command: str):
-        conda_output = subprocess.check_output([command, '-V']).decode('utf-8').strip()
+        try:
+            conda_output = subprocess.check_output([command, '-V']).decode('utf-8').strip()
+        except Exception as _:
+            return False
         conda_output_regex = r'conda (\d+\.\d+\.\d+)'  # mamba and conda both output 'conda 23.3.1'
         import re
         conda_match = re.match(conda_output_regex, conda_output)
@@ -32,13 +35,15 @@ def create_activate_env(env_name: str):
     env_list_str = subprocess.check_output([conda_exe, 'env', 'list', '--json']).decode('utf-8')
     env_list_json = json.loads(env_list_str)
     envs = env_list_json['envs']
-    first_run = env_name not in envs
+    envs_dirs = [os.path.split(env)[1] for env in envs]
+    first_run = env_name not in envs_dirs
     if first_run:
         import subprocess
         on_windows = os.name == 'nt'
         yml_file = '{}{}.yml'.format(env_name, '_win' if on_windows else '')
-        print('Creating conda environment from {}'.format(yml_file))
-        subprocess.call([conda_exe, 'create', '--file', yml_file, '-y'])
+        env_install_cmd = [conda_exe, 'env', 'create', '--file', yml_file]
+        print('Creating conda environment from {}\n{}'.format(yml_file, env_install_cmd))
+        subprocess.call(env_install_cmd)
 
     # conda activate pps
     subprocess.call([conda_exe, 'activate', env_name])

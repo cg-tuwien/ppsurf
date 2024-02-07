@@ -16,7 +16,7 @@ def mp_worker(call):
         call = call[:-1]
         subprocess.run(call)
     else:
-        #subprocess.run(call, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # suppress outputs
+        # subprocess.run(call, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # suppress outputs
         subprocess.run(call, stdout=subprocess.DEVNULL)
 
 
@@ -82,12 +82,13 @@ def get_multi_gpu_params(max_workers: typing.Optional[int] = None) -> typing.Lis
     if max_workers is not None:
         num_workers = min(num_workers, max_workers)
 
-    return [
+    res_args = [
         '--trainer.strategy', 'ddp',
         # '--trainer.strategy', 'ddp_find_unused_parameters_true',  # for debugging
         '--model.init_args.workers', str(num_workers),
-        '--data.init_args.use_ddp', True,
+        '--data.init_args.use_ddp', str(True),
         '--data.init_args.workers', str(num_workers),
         '--data.init_args.batch_size', str(50 // num_gpus),
     ]
-        
+
+    return res_args
