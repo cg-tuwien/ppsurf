@@ -2,6 +2,7 @@
 
 import os
 from source.base.fs import create_activate_env
+from source.cli import get_multi_gpu_params
 
 if __name__ == '__main__':
     create_activate_env('pps')
@@ -10,7 +11,7 @@ if __name__ == '__main__':
     main_cmd = 'pps.py'
     name = 'ppsurf_50nn'
     version = '0'
-    on_server = True
+    # on_server = True
 
     main_cmd = python_call + ' ' + main_cmd
 
@@ -18,7 +19,8 @@ if __name__ == '__main__':
     configs = '-c configs/poco.yaml -c configs/ppsurf.yaml {server} -c configs/{name}.yaml'
 
     # training
-    configs_train = configs.format(server='-c configs/device_server.yaml' if on_server else '', name=name)
+    # configs_train = configs.format(server='-c configs/device_server.yaml' if on_server else '', name=name)
+    configs_train = configs.format(server=' '.join(get_multi_gpu_params()), name=name)
     cmd_train = cmd_template.format(main_cmd=main_cmd, sub_cmd='fit', configs=configs_train)
     os.system(cmd_train)
 

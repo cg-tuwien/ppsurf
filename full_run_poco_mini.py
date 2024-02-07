@@ -8,6 +8,7 @@
 
 import os
 from source.base.fs import create_activate_env
+from source.cli import get_multi_gpu_params
 
 if __name__ == '__main__':
     create_activate_env('pps')
@@ -16,7 +17,7 @@ if __name__ == '__main__':
     main_cmd = 'poco.py'
     name = 'poco_mini'
     version = '0'
-    on_server = False
+    # on_server = False
 
     debug = ''
     print_config = ''
@@ -33,7 +34,8 @@ if __name__ == '__main__':
     configs = '-c configs/poco.yaml {server} -c configs/{name}.yaml'
 
     # training
-    configs_train = configs.format(server='-c configs/device_server.yaml' if on_server else '', name=name)
+    # configs_train = configs.format(server='-c configs/device_server.yaml' if on_server else '', name=name)
+    configs_train = configs.format(server=' '.join(get_multi_gpu_params()), name=name)
     cmd_train = cmd_template.format(main_cmd=main_cmd, sub_cmd='fit', configs=configs_train, debug=debug, print_config=print_config)
     os.system(cmd_train)
 
