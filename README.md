@@ -111,7 +111,7 @@ Train, reconstruct and evaluate to replicate the main results (PPSurf 50NN) from
 python full_run_pps.py
 ```
 
-Training takes about 5 hours on 4 A40 GPUs.
+Training takes about 5 hours on 4 A40 GPUs. By default, training will use all available GPUs and CPUs.
 Reconstructing one object takes about 1 minute on a single A40. The test sets have almost 1000 objects in total. 
 
 Logging during training with Tensorboard is enabled by default. 
@@ -289,7 +289,11 @@ conda update -n base -c defaults conda
 
 Pip might fail when creating the environment. If so, try installing the Pip packages from the `pps.yml` manually.
 
-On Windows, Pip install may raise a "Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools" error. In this case, install the MS Visual Studio build tools, as described on [Stackoverflow](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst).
+On Windows, Pip install may raise a 
+"Microsoft Visual C++ 14.0 or greater is required. 
+Get it with "Microsoft C++ Build Tools" error. 
+In this case, install the MS Visual Studio build tools, 
+as described on [Stackoverflow](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst).
 
 
 ## Updates
