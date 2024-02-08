@@ -7,12 +7,9 @@
 # snakeviz poco.prof
 
 import os
-from source.base.fs import create_activate_env
 from source.base.mp import get_multi_gpu_params
 
 if __name__ == '__main__':
-    create_activate_env('pps')
-
     python_call = 'python'
     main_cmd = 'poco.py'
     name = 'poco'
