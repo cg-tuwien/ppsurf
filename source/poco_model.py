@@ -256,7 +256,7 @@ class PocoModel(pl.LightningModule):
         if mesh is not None:
             # de-normalize if not part of a dataset
             from source.occupancy_data_module import in_file_is_dataset
-            if not in_file_is_dataset(pc_file_in):
+            if not in_file_is_dataset(self.in_file):
                 from source.base.math import get_points_normalization_info, denormalize_points_with_info
                 from source.occupancy_data_module import OccupancyDataModule
                 pts_np = OccupancyDataModule.load_pts(pts_file=pc_file_in)
