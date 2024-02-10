@@ -259,7 +259,7 @@ This will:
   `results/comp/{dataset}/{method}/mesh_cd_vis` as PLY.
 - render the reconstructed mesh with and without distance colors in `results/comp/{dataset}/{method}/mesh_rend` and
   `results/comp/{dataset}/{method}/cd_vis_rend` as PNG.
-- render the GT mesh in `results/comp/{dataset}/mesh_gt_rend` as PNG.
+- render the GT mesh in `results/comp/{dataset}/mesh_gt_rend` as PNG. Note that this does only work if a real screen is attached.
 - assemble the per-method mean, median and stddev for all metrics in `results/comp/{comp_name}.xlsx`.
 - assemble all renderings as a qualitative report in `results/comp/{comp_name}.html`.
 - assemble per-dataset mean for all relevant datasets, methods and metrics in `results/comp/reports/{comp_name}` 

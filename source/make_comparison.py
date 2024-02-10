@@ -79,7 +79,7 @@ def comparison_rec_mesh_template(args):
     cd_meshes_out = [[os.path.join(comp_dir, res, 'mesh_cd_vis', '{}.ply'.format(s))
                       for s in shape_names] for res in args.result_headers]
     cd_meshes_out_flat = list(chain.from_iterable(cd_meshes_out))
-    rec_paths = [os.path.join(res, 'meshes/{}.ply') for res in args.result_paths]
+    rec_paths = [os.path.join(res, 'meshes/{}.xyz.ply') for res in args.result_paths]
     rec_meshes = [[res.format(s) for s in shape_names] for res in rec_paths]
     rec_meshes = [[s if os.path.isfile(s) else s[:-4] + '.obj' for s in res] for res in rec_meshes]  # if no ply, try obj
     rec_meshes_flat = list(chain.from_iterable(rec_meshes))
@@ -95,7 +95,7 @@ def comparison_rec_mesh_template(args):
                            for s in shape_names] for res in args.result_headers]
     cd_vis_renders_out_flat = list(chain.from_iterable(cd_vis_renders_out))
     rec_renders_flat = list(chain.from_iterable(rec_renders_out))
-    pc = [os.path.join(args.data_dir, '04_pts', '{}.xyz.npy'.format(vs)) for vs in shape_names]
+    pc = [os.path.join(args.data_dir, '04_pts_vis', '{}.xyz.ply'.format(vs)) for vs in shape_names]
     pc_renders_out = [os.path.join(comp_dir, 'pc_rend', '{}.png'.format(vs)) for vs in shape_names]
     all_meshes_in = rec_meshes_flat + gt_meshes + cd_meshes_out_flat + pc
     all_renders_out = rec_renders_flat + gt_renders_out + cd_vis_renders_out_flat + pc_renders_out

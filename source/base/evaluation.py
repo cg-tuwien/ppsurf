@@ -366,12 +366,23 @@ def make_dataset_comparison(results_reports: typing.Sequence[typing.Sequence[str
     import pandas as pd
 
     def _get_header_and_mean(report_file: typing.Union[str, typing.Any]):
+        metrics_type = os.path.basename(report_file)
+        metrics_type = os.path.splitext(metrics_type)[0]
+
+        if not os.path.isfile(report_file):
+            method_name = os.path.basename(os.path.split(os.path.split(report_file)[0])[0])
+            headers = ['Model', 'Mean {}'.format(metrics_type),
+                       'Median {}'.format(metrics_type), 'Stdev {}'.format(metrics_type), ]
+            data = [method_name, np.nan, np.nan, np.nan, ]
+
+            df_missing = pd.DataFrame(data=[data], columns=headers)
+            df_missing = df_missing.set_index('Model')
+            return df_missing
+
         df = pd.read_excel(io=report_file, header=0, index_col=0)
         df = _drop_stats_rows(df)
 
         if len(df.columns) == 1:  # CD, IoU, NC -> single columns in multiple files
-            metrics_type = os.path.basename(report_file)
-            metrics_type = os.path.splitext(metrics_type)[0]
             df_name = df.columns[0]
             df_mean = df.mean(axis=0)[0]
             df_median = df.median(axis=0)[0]
