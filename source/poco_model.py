@@ -192,7 +192,7 @@ class PocoModel(pl.LightningModule):
         pc_file_in = batch['pc_file_in'][0]
         if in_file_is_dataset(self.in_file):
             results_dir = get_results_dir(out_dir=self.results_dir, name=self.name, in_file=self.in_file)
-            out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in) + '.ply')
+            out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in))
         else:
             # simple folder structure for single reconstruction
             out_file_basename = os.path.basename(pc_file_in) + '.ply'
