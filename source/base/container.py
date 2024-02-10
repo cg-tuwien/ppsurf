@@ -136,7 +136,7 @@ def dict_np_to_torch(patch_data: dict):
     for key in patch_data.keys():
         val = patch_data[key]
         if isinstance(val, np.ndarray):
-            patch_data[key] = from_numpy(val)
+            patch_data[key] = from_numpy(val.copy())
         elif isinstance(val, Tensor):
             pass  # nothing to do
         elif np.isscalar(val):
