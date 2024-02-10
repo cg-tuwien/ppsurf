@@ -292,6 +292,7 @@ def get_metric_mesh_single_file(gt_mesh_file: str, mesh_file: str, num_samples: 
         else:
             raise ValueError()
     elif not os.path.isfile(mesh_file):
+        print('WARNING: mesh missing: {}'.format(mesh_file))
         metric_result = np.nan
         # raise FileExistsError()
     elif not os.path.isfile(gt_mesh_file):

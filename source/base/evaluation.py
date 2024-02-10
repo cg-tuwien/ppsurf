@@ -6,31 +6,10 @@ import typing
 
 from typing import TYPE_CHECKING
 
-from source.base.metrics import get_metric_meshes, get_metric_mesh_single_file
+from source.base.metrics import get_metric_meshes
 
 if TYPE_CHECKING:
     import pandas as pd
-
-
-def get_metric_meshes(result_file_template: typing.Sequence[str],
-                      shape_list: typing.Sequence[str], gt_mesh_files: typing.Sequence[str],
-                      num_samples=10000, metric: typing.Literal['chamfer', 'iou', 'normals', 'f1'] = 'chamfer',
-                      num_processes=1) \
-        -> typing.Iterable[np.ndarray]:
-    from source.base.mp import start_process_pool
-
-    metric_results = []
-    for template in result_file_template:
-        cd_params = []
-        for sni, shape_name in enumerate(shape_list):
-            gt_mesh_file = gt_mesh_files[sni]
-            mesh_file = template.format(shape_name)
-            cd_params.append((gt_mesh_file, mesh_file, num_samples, metric))
-
-        metric_results.append(np.array(start_process_pool(
-            worker_function=get_metric_mesh_single_file, parameters=cd_params, num_processes=num_processes)))
-
-    return metric_results
 
 
 def make_excel_file_comparison(cd_pred_list, human_readable_results, output_file, val_set,
@@ -559,8 +538,13 @@ def xslx_to_latex(xlsx_file: str, latex_file: str):
 def merge_comps(comp_list: typing.Sequence[str], comp_merged_out_file: str,
                 comp_merged_out_latex: str, methods_order: typing.Optional[list], float_format='%.2f'):
     import pandas as pd
-    dfs = [pd.read_excel(io=f, header=0, index_col=0) for f in comp_list]
-    datasets = [os.path.split(os.path.dirname(f))[1] for f in comp_list]
+    comp_list_existing = [f for f in comp_list if os.path.isfile(f)]
+    if len(comp_list_existing) == 0:
+        print('WARNING: No metrics found for: {}'.format(comp_list))
+        return
+    
+    dfs = [pd.read_excel(io=f, header=0, index_col=0) for f in comp_list_existing]
+    datasets = [os.path.split(os.path.dirname(f))[1] for f in comp_list_existing]
     dfs_with_ds = [df.assign(dataset=datasets[dfi]) for dfi, df in enumerate(dfs)]
     dfs_multiindex = [df.set_index(['dataset', df.index]).T for df in dfs_with_ds]
 

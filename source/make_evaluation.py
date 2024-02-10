@@ -39,7 +39,7 @@ def make_evaluation(args):
         gt_meshes = [os.path.join(gt_meshes_dir, '{}.ply'.format(vs)) for vs in shape_names]
         os.makedirs(model_results_rec_dir, exist_ok=True)
         result_headers = [args.name]
-        result_file_templates = [os.path.join(model_results_rec_dir, 'meshes/{}.ply')]
+        result_file_templates = [os.path.join(model_results_rec_dir, 'meshes/{}.xyz.ply')]
         _ = evaluation.make_quantitative_comparison(
             shape_names=shape_names, gt_mesh_files=gt_meshes,
             result_headers=result_headers, result_file_templates=result_file_templates,
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         'pgr',
         'neural_imls'
         'sap_optim',
-        'sap'
+        'sap',
         'p2s',
         'poco Pts_gen_sub3k_iter10'
         'ppsurf_qpoints',
