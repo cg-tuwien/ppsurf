@@ -178,10 +178,10 @@ class OccupancyDataModule(LightningDataModule, ABC):
         # - XYZ as whitespace-separated text file, read by [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.loadtxt.html).
         # Load first 3 columns as XYZ coordinates. All other columns will be ignored.
         # - NPY and NPZ, read by [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.load.html).
-        # NPZ assumes default key='arr_0'. All columns after the first 3 columns will be ignored. **(TODO)**
+        # NPZ assumes default key='arr_0'. All columns after the first 3 columns will be ignored.
         # - LAS and LAZ (version 1.0-1.4), COPC and CRS loaded by [Laspy](https://github.com/laspy/laspy).
         # You may want to sub-sample large point clouds to ~250k points to avoid speed and memory issues.
-        # For detailed reconstruction, you'll need to extract parts of large point clouds. **(TODO)**
+        # For detailed reconstruction, you'll need to extract parts of large point clouds.
 
         import os
         

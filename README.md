@@ -44,8 +44,28 @@ Test the setup with the minimal dataset included in the repo:
 python full_run_pps_mini.py
 ```
 
-On Windows, Pip install may raise a "Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools" error. In this case, install the MS Visual Studio build tools, as described on [Stackoverflow](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst).
+## Datasets, Model and Results
 
+Datesets:
+``` bash
+# download the ABC training and validation set
+python datasets/download_abc_training.py
+
+# download the test datasets
+python datasets/download_testsets.py
+```
+
+Model:
+``` bash
+python models/download_ppsurf_50nn.py
+```
+Let us know in case you need the other models from the ablation. 
+They were trained using old, unclean code and are not directly compatible with this repo. 
+
+Results:
+
+Download the results used for the paper from [here](https://www.cg.tuwien.ac.at/research/publications/2024/erler_2024_ppsurf/).
+This includes meshes and metrics for the 50NN variant.
 
 ## Reconstruct single Point Clouds
 
@@ -86,19 +106,12 @@ For detailed reconstruction, you'll need to extract parts of large point clouds.
 
 ## Replicate Results
 
-Train, reconstruct and evaluate to replicate the main results from the paper
+Train, reconstruct and evaluate to replicate the main results (PPSurf 50NN) from the paper
 ``` bash
-# download the ABC training and validation set
-python datasets/download_abc_training.py
-
-# download the test datasets
-python datasets/download_testsets.py
-
-# run all stages
 python full_run_pps.py
 ```
 
-Training takes about 5 hours on 4 A40 GPUs.
+Training takes about 5 hours on 4 A40 GPUs. By default, training will use all available GPUs and CPUs.
 Reconstructing one object takes about 1 minute on a single A40. The test sets have almost 1000 objects in total. 
 
 Logging during training with Tensorboard is enabled by default. 
@@ -117,7 +130,7 @@ The basic structure is:
 # CLI command template 
 python {CLI entry point} {sub-command} {configs} {extra params}
 ```
-Where the *CLI entry point* is either *pps.py* or *poco.py* and *sub-command* can be one of *[fit, test, predict]*.  
+Where the *CLI entry point* is either `pps.py` or `poco.py` and *sub-command* can be one of *[fit, test, predict]*.  
 *Fit* trains a model, *test* evaluates it and *predict* reconstructs a whole dataset or a single point cloud.
 
 *Configs* can be any number of YAML files. Later ones override values from earlier ones. 
@@ -141,7 +154,7 @@ Finally, you should disable the logger, or it will create empty folders and logs
 where *name* is e.g. ppsurf and *version* is usually 0. 
 If you run the training multiple times, you need to increment the version number.
 
-This will print the assembled config without running anything:
+Appending this will print the assembled config without running anything:
 ``` bash
 --print_config
 ```
@@ -205,6 +218,9 @@ python pps.py predict -c configs/poco.yaml -c configs/ppsurf.yaml -c configs/pps
 python pps.py predict -c configs/poco.yaml -c configs/ppsurf.yaml -c configs/ppsurf_50nn.yaml \
   --data.init_args.in_file datasets/real_world/testset.txt --ckpt_path models/ppsurf_50nn/version_0/checkpoints/last.ckpt \
   --trainer.logger False --trainer.devices 1
+  
+ # create comparison tables (will have only 50NN column)
+ python source/figures/comp_all.py
 ```
 
 
@@ -224,12 +240,12 @@ Reconstructed meshes are stored in `results/{model}/{dataset}/meshes`.
 After reconstruction, metrics are computed and stored in `results/{model}/{dataset}/{metric}_{model}.xlsx`,
 where *metric* is one of *[chamfer_distance, f1, iou, normal_error]*.
 
-**Metrics (for other Methods)**:
-You can re-run the metrics computation with:
+**Metrics**:
+You can (re-)run the metrics, e.g. for other methods, with:
 ``` bash
 python source/make_evaluation.py
 ```
-You may need to adjust *model_names* and *dataset_names* in the script. 
+You may need to adjust *model_names* and *dataset_names* in this script. 
 This supports the results of other methods if they are in the same structure as ours.
 
 **Comparisons**:
@@ -243,7 +259,7 @@ This will:
   `results/comp/{dataset}/{method}/mesh_cd_vis` as PLY.
 - render the reconstructed mesh with and without distance colors in `results/comp/{dataset}/{method}/mesh_rend` and
   `results/comp/{dataset}/{method}/cd_vis_rend` as PNG.
-- render the GT mesh in `results/comp/{dataset}/mesh_gt_rend` as PNG.
+- render the GT mesh in `results/comp/{dataset}/mesh_gt_rend` as PNG. Note that this does only work if a real screen is attached.
 - assemble the per-method mean, median and stddev for all metrics in `results/comp/{comp_name}.xlsx`.
 - assemble all renderings as a qualitative report in `results/comp/{comp_name}.html`.
 - assemble per-dataset mean for all relevant datasets, methods and metrics in `results/comp/reports/{comp_name}` 
@@ -272,6 +288,12 @@ conda update -n base -c defaults conda
 ```
 
 Pip might fail when creating the environment. If so, try installing the Pip packages from the `pps.yml` manually.
+
+On Windows, Pip install may raise a 
+"Microsoft Visual C++ 14.0 or greater is required. 
+Get it with "Microsoft C++ Build Tools" error. 
+In this case, install the MS Visual Studio build tools, 
+as described on [Stackoverflow](https://stackoverflow.com/questions/64261546/how-to-solve-error-microsoft-visual-c-14-0-or-greater-is-required-when-inst).
 
 
 ## Updates

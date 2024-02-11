@@ -192,7 +192,7 @@ class PocoModel(pl.LightningModule):
         pc_file_in = batch['pc_file_in'][0]
         if in_file_is_dataset(self.in_file):
             results_dir = get_results_dir(out_dir=self.results_dir, name=self.name, in_file=self.in_file)
-            out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in) + '.ply')
+            out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in))
         else:
             # simple folder structure for single reconstruction
             out_file_basename = os.path.basename(pc_file_in) + '.ply'
@@ -256,7 +256,7 @@ class PocoModel(pl.LightningModule):
         if mesh is not None:
             # de-normalize if not part of a dataset
             from source.occupancy_data_module import in_file_is_dataset
-            if not in_file_is_dataset(pc_file_in):
+            if not in_file_is_dataset(self.in_file):
                 from source.base.math import get_points_normalization_info, denormalize_points_with_info
                 from source.occupancy_data_module import OccupancyDataModule
                 pts_np = OccupancyDataModule.load_pts(pts_file=pc_file_in)
@@ -291,7 +291,7 @@ class PocoModel(pl.LightningModule):
             gt_meshes = [os.path.join(gt_meshes_dir, '{}.ply'.format(vs)) for vs in shape_names]
             os.makedirs(results_dir, exist_ok=True)
             result_headers = [self.name]
-            result_file_templates = [os.path.join(results_dir, 'meshes/{}.ply')]
+            result_file_templates = [os.path.join(results_dir, 'meshes/{}.xyz.ply')]
             _ = evaluation.make_quantitative_comparison(
                 shape_names=shape_names, gt_mesh_files=gt_meshes,
                 result_headers=result_headers, result_file_templates=result_file_templates,

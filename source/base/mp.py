@@ -1,6 +1,7 @@
 import subprocess
 import multiprocessing
 import typing
+import os
 
 
 def mp_worker(call):
@@ -15,7 +16,7 @@ def mp_worker(call):
         call = call[:-1]
         subprocess.run(call)
     else:
-        #subprocess.run(call, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # suppress outputs
+        # subprocess.run(call, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # suppress outputs
         subprocess.run(call, stdout=subprocess.DEVNULL)
 
 
@@ -69,4 +70,25 @@ def start_process(func, args: typing.Sequence, start_method=None):
     proc.start()
     return proc
 
-        
+
+def get_multi_gpu_params(max_workers: typing.Optional[int] = None) -> typing.List[str]:
+    from torch.cuda import device_count
+
+    num_gpus = device_count()
+    if num_gpus <= 1:
+        return []
+
+    num_workers = os.cpu_count()
+    if max_workers is not None:
+        num_workers = min(num_workers, max_workers)
+
+    res_args = [
+        '--trainer.strategy', 'ddp',
+        # '--trainer.strategy', 'ddp_find_unused_parameters_true',  # for debugging
+        '--model.init_args.workers', str(num_workers),
+        '--data.init_args.use_ddp', str(True),
+        '--data.init_args.workers', str(num_workers),
+        '--data.init_args.batch_size', str(50 // num_gpus),
+    ]
+
+    return res_args

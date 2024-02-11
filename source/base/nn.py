@@ -2,8 +2,6 @@ import typing
 
 import pytorch_lightning as pl
 import torch
-import torch.nn
-from torch import nn as nn
 from torch.nn import functional as f
 
 
@@ -147,19 +145,19 @@ class STN(pl.LightningModule):
         self.conv3 = torch.nn.Conv1d(128, self.net_size_max, 1)
         self.mp1 = torch.nn.MaxPool1d(num_points)
 
-        self.fc1 = nn.Linear(self.net_size_max, int(self.net_size_max / 2))
-        self.fc2 = nn.Linear(int(self.net_size_max / 2), int(self.net_size_max / 4))
-        self.fc3 = nn.Linear(int(self.net_size_max / 4), self.dim*self.dim)
+        self.fc1 = torch.nn.Linear(self.net_size_max, int(self.net_size_max / 2))
+        self.fc2 = torch.nn.Linear(int(self.net_size_max / 2), int(self.net_size_max / 4))
+        self.fc3 = torch.nn.Linear(int(self.net_size_max / 4), self.dim*self.dim)
 
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.bn3 = nn.BatchNorm1d(self.net_size_max)
-        self.bn4 = nn.BatchNorm1d(int(self.net_size_max / 2))
-        self.bn5 = nn.BatchNorm1d(int(self.net_size_max / 4))
+        self.bn1 = torch.nn.BatchNorm1d(64)
+        self.bn2 = torch.nn.BatchNorm1d(128)
+        self.bn3 = torch.nn.BatchNorm1d(self.net_size_max)
+        self.bn4 = torch.nn.BatchNorm1d(int(self.net_size_max / 2))
+        self.bn5 = torch.nn.BatchNorm1d(int(self.net_size_max / 4))
 
         if self.num_scales > 1:
-            self.fc0 = nn.Linear(self.net_size_max * self.num_scales, self.net_size_max)
-            self.bn0 = nn.BatchNorm1d(self.net_size_max)
+            self.fc0 = torch.nn.Linear(self.net_size_max * self.num_scales, self.net_size_max)
+            self.bn0 = torch.nn.BatchNorm1d(self.net_size_max)
 
     def forward(self, x):
         batch_size = x.size()[0]
@@ -206,19 +204,19 @@ class QSTN(pl.LightningModule):
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, self.net_size_max, 1)
         self.mp1 = torch.nn.MaxPool1d(num_points)
-        self.fc1 = nn.Linear(self.net_size_max, int(self.net_size_max / 2))
-        self.fc2 = nn.Linear(int(self.net_size_max / 2), int(self.net_size_max / 4))
-        self.fc3 = nn.Linear(int(self.net_size_max / 4), 4)
+        self.fc1 = torch.nn.Linear(self.net_size_max, int(self.net_size_max / 2))
+        self.fc2 = torch.nn.Linear(int(self.net_size_max / 2), int(self.net_size_max / 4))
+        self.fc3 = torch.nn.Linear(int(self.net_size_max / 4), 4)
 
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.bn3 = nn.BatchNorm1d(self.net_size_max)
-        self.bn4 = nn.BatchNorm1d(int(self.net_size_max / 2))
-        self.bn5 = nn.BatchNorm1d(int(self.net_size_max / 4))
+        self.bn1 = torch.nn.BatchNorm1d(64)
+        self.bn2 = torch.nn.BatchNorm1d(128)
+        self.bn3 = torch.nn.BatchNorm1d(self.net_size_max)
+        self.bn4 = torch.nn.BatchNorm1d(int(self.net_size_max / 2))
+        self.bn5 = torch.nn.BatchNorm1d(int(self.net_size_max / 4))
 
         if self.num_scales > 1:
-            self.fc0 = nn.Linear(self.net_size_max*self.num_scales, self.net_size_max)
-            self.bn0 = nn.BatchNorm1d(self.net_size_max)
+            self.fc0 = torch.nn.Linear(self.net_size_max*self.num_scales, self.net_size_max)
+            self.bn0 = torch.nn.BatchNorm1d(self.net_size_max)
 
     def forward(self, x):
         x = f.relu(self.bn1(self.conv1(x)))
@@ -280,18 +278,18 @@ class PointNetfeat(pl.LightningModule):
 
         self.conv0a = torch.nn.Conv1d(self.dim, 64, 1)
         self.conv0b = torch.nn.Conv1d(64, 64, 1)
-        self.bn0a = nn.BatchNorm1d(64)
-        self.bn0b = nn.BatchNorm1d(64)
+        self.bn0a = torch.nn.BatchNorm1d(64)
+        self.bn0b = torch.nn.BatchNorm1d(64)
         self.conv1 = torch.nn.Conv1d(64, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, output_size, 1)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.bn3 = nn.BatchNorm1d(output_size)
+        self.bn1 = torch.nn.BatchNorm1d(64)
+        self.bn2 = torch.nn.BatchNorm1d(128)
+        self.bn3 = torch.nn.BatchNorm1d(output_size)
 
         if self.num_scales > 1:
             self.conv4 = torch.nn.Conv1d(output_size, output_size*self.num_scales, 1)
-            self.bn4 = nn.BatchNorm1d(output_size*self.num_scales)
+            self.bn4 = torch.nn.BatchNorm1d(output_size*self.num_scales)
 
         if self.sym_op == 'max':
             self.mp1 = torch.nn.MaxPool1d(num_points)
@@ -379,8 +377,8 @@ class MLP(pl.LightningModule):
     def __init__(self, input_size: int, output_size: int, num_layers: int,
                  halving_size=True, final_bn_act=False, final_layer_norm=False,
                  activation: typing.Optional[typing.Callable[..., torch.nn.Module]] = torch.nn.ReLU,
-                 norm: typing.Optional[typing.Callable[..., torch.nn.Module]] = nn.BatchNorm1d,
-                 fc_layer=nn.Linear, dropout=0.0):
+                 norm: typing.Optional[typing.Callable[..., torch.nn.Module]] = torch.nn.BatchNorm1d,
+                 fc_layer=torch.nn.Linear, dropout=0.0):
         super(MLP, self).__init__()
 
         self.num_layers = num_layers
@@ -395,7 +393,7 @@ class MLP(pl.LightningModule):
 
         layers_list = []
         for i in range(self.num_layers-1):
-            layers_list.append(nn.Sequential(
+            layers_list.append(torch.nn.Sequential(
                 fully_connected[i],
                 norms[i],
                 activation(),
@@ -405,11 +403,11 @@ class MLP(pl.LightningModule):
         final_modules = [fc_layer(layer_sizes[-1], output_size)]
         if final_bn_act:
             if final_layer_norm:
-                final_modules.append(nn.LayerNorm(output_size))
+                final_modules.append(torch.nn.LayerNorm(output_size))
             else:
                 final_modules.append(norm(output_size))
             final_modules.append(activation())
-        final_layer = nn.Sequential(*final_modules)
+        final_layer = torch.nn.Sequential(*final_modules)
         layers_list.append(final_layer)
 
         self.layers = torch.nn.Sequential(*layers_list)
@@ -423,18 +421,19 @@ class ResidualBlock(pl.LightningModule):
 
     def __init__(self, in_channels, out_channels, kernel_size, activation=torch.nn.ReLU()):
         super().__init__()
-        bn = nn.BatchNorm1d
+        bn = torch.nn.BatchNorm1d
 
-        self.cv0 = nn.Conv1d(in_channels, in_channels // 2, 1)
+        self.cv0 = torch.nn.Conv1d(in_channels, in_channels // 2, 1)
         self.bn0 = bn(in_channels // 2)
         self.cv1 = FKAConvLayer(in_channels // 2, in_channels // 2, kernel_size, activation=activation)
         self.bn1 = bn(in_channels // 2)
-        self.cv2 = nn.Conv1d(in_channels // 2, out_channels, 1)
+        self.cv2 = torch.nn.Conv1d(in_channels // 2, out_channels, 1)
         self.bn2 = bn(out_channels)
-        self.activation = nn.ReLU(inplace=True)
+        self.activation = torch.nn.ReLU(inplace=True)
 
-        self.shortcut = nn.Conv1d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
-        self.bn_shortcut = bn(out_channels) if in_channels != out_channels else nn.Identity()
+        self.shortcut = torch.nn.Conv1d(in_channels, out_channels, 1) if in_channels != out_channels \
+            else torch.nn.Identity()
+        self.bn_shortcut = bn(out_channels) if in_channels != out_channels else torch.nn.Identity()
 
     def forward(self, x, pts, support_points, neighbors_indices):
         x_short = x
@@ -467,7 +466,7 @@ class FKAConvNetwork(pl.LightningModule):
 
         self.cv0 = FKAConvLayer(in_channels, hidden, 16, activation=activation)
 
-        bn = nn.BatchNorm1d
+        bn = torch.nn.BatchNorm1d
         self.bn0 = bn(hidden)
 
         def _make_resnet_block(in_channels_resnetb, out_channels_resnetb):
@@ -485,26 +484,26 @@ class FKAConvNetwork(pl.LightningModule):
         self.resnetb41 = _make_resnet_block(16 * hidden, 16 * hidden)
         if self.segmentation:
 
-            self.cv5 = nn.Conv1d(32 * hidden, 16 * hidden, 1)
+            self.cv5 = torch.nn.Conv1d(32 * hidden, 16 * hidden, 1)
             self.bn5 = bn(16 * hidden)
-            self.cv3d = nn.Conv1d(24 * hidden, 8 * hidden, 1)
+            self.cv3d = torch.nn.Conv1d(24 * hidden, 8 * hidden, 1)
             self.bn3d = bn(8 * hidden)
-            self.cv2d = nn.Conv1d(12 * hidden, 4 * hidden, 1)
+            self.cv2d = torch.nn.Conv1d(12 * hidden, 4 * hidden, 1)
             self.bn2d = bn(4 * hidden)
-            self.cv1d = nn.Conv1d(6 * hidden, 2 * hidden, 1)
+            self.cv1d = torch.nn.Conv1d(6 * hidden, 2 * hidden, 1)
             self.bn1d = bn(2 * hidden)
-            self.cv0d = nn.Conv1d(3 * hidden, hidden, 1)
+            self.cv0d = torch.nn.Conv1d(3 * hidden, hidden, 1)
             self.bn0d = bn(hidden)
 
             if last_layer_additional_size is not None:
-                self.fcout = nn.Conv1d(hidden + last_layer_additional_size, out_channels, 1)
+                self.fcout = torch.nn.Conv1d(hidden + last_layer_additional_size, out_channels, 1)
             else:
-                self.fcout = nn.Conv1d(hidden, out_channels, 1)
+                self.fcout = torch.nn.Conv1d(hidden, out_channels, 1)
         else:
-            self.fcout = nn.Conv1d(16 * hidden, out_channels, 1)
+            self.fcout = torch.nn.Conv1d(16 * hidden, out_channels, 1)
 
-        self.dropout = nn.Dropout(dropout)
-        self.activation = nn.ReLU()
+        self.dropout = torch.nn.Dropout(dropout)
+        self.activation = torch.nn.ReLU()
 
     def forward(self, data, spectral_only=False):
         if not spectral_only:
@@ -569,23 +568,23 @@ class FKAConvLayer(pl.LightningModule):
         self.dim = dim
 
         # convolution kernel
-        self.cv = nn.Conv2d(in_channels, out_channels, (1, kernel_size), bias=bias)
+        self.cv = torch.nn.Conv2d(in_channels, out_channels, (1, kernel_size), bias=bias)
 
         # normalization radius
         self.norm_radius_momentum = 0.1
         self.register_buffer('norm_radius', torch.Tensor(1,))
-        self.alpha = nn.Parameter(torch.Tensor(1,), requires_grad=True)
-        self.beta = nn.Parameter(torch.Tensor(1,), requires_grad=True)
+        self.alpha = torch.nn.Parameter(torch.Tensor(1,), requires_grad=True)
+        self.beta = torch.nn.Parameter(torch.Tensor(1,), requires_grad=True)
         torch.nn.init.ones_(self.norm_radius.data)
         torch.nn.init.ones_(self.alpha.data)
         torch.nn.init.ones_(self.beta.data)
 
         # features to kernel weights
-        self.fc1 = nn.Conv2d(self.dim, self.kernel_size, 1, bias=False)
-        self.fc2 = nn.Conv2d(2 * self.kernel_size, self.kernel_size, 1, bias=False)
-        self.fc3 = nn.Conv2d(2 * self.kernel_size, self.kernel_size, 1, bias=False)
-        self.bn1 = nn.InstanceNorm2d(self.kernel_size, affine=True)
-        self.bn2 = nn.InstanceNorm2d(self.kernel_size, affine=True)
+        self.fc1 = torch.nn.Conv2d(self.dim, self.kernel_size, 1, bias=False)
+        self.fc2 = torch.nn.Conv2d(2 * self.kernel_size, self.kernel_size, 1, bias=False)
+        self.fc3 = torch.nn.Conv2d(2 * self.kernel_size, self.kernel_size, 1, bias=False)
+        self.bn1 = torch.nn.InstanceNorm2d(self.kernel_size, affine=True)
+        self.bn2 = torch.nn.InstanceNorm2d(self.kernel_size, affine=True)
 
         self.activation = activation
 

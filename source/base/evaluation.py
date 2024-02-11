@@ -6,31 +6,10 @@ import typing
 
 from typing import TYPE_CHECKING
 
-from source.base.metrics import get_metric_meshes, get_metric_mesh_single_file
+from source.base.metrics import get_metric_meshes
 
 if TYPE_CHECKING:
     import pandas as pd
-
-
-def get_metric_meshes(result_file_template: typing.Sequence[str],
-                      shape_list: typing.Sequence[str], gt_mesh_files: typing.Sequence[str],
-                      num_samples=10000, metric: typing.Literal['chamfer', 'iou', 'normals', 'f1'] = 'chamfer',
-                      num_processes=1) \
-        -> typing.Iterable[np.ndarray]:
-    from source.base.mp import start_process_pool
-
-    metric_results = []
-    for template in result_file_template:
-        cd_params = []
-        for sni, shape_name in enumerate(shape_list):
-            gt_mesh_file = gt_mesh_files[sni]
-            mesh_file = template.format(shape_name)
-            cd_params.append((gt_mesh_file, mesh_file, num_samples, metric))
-
-        metric_results.append(np.array(start_process_pool(
-            worker_function=get_metric_mesh_single_file, parameters=cd_params, num_processes=num_processes)))
-
-    return metric_results
 
 
 def make_excel_file_comparison(cd_pred_list, human_readable_results, output_file, val_set,
@@ -387,12 +366,23 @@ def make_dataset_comparison(results_reports: typing.Sequence[typing.Sequence[str
     import pandas as pd
 
     def _get_header_and_mean(report_file: typing.Union[str, typing.Any]):
+        metrics_type = os.path.basename(report_file)
+        metrics_type = os.path.splitext(metrics_type)[0]
+
+        if not os.path.isfile(report_file):
+            method_name = os.path.basename(os.path.split(os.path.split(report_file)[0])[0])
+            headers = ['Model', 'Mean {}'.format(metrics_type),
+                       'Median {}'.format(metrics_type), 'Stdev {}'.format(metrics_type), ]
+            data = [method_name, np.nan, np.nan, np.nan, ]
+
+            df_missing = pd.DataFrame(data=[data], columns=headers)
+            df_missing = df_missing.set_index('Model')
+            return df_missing
+
         df = pd.read_excel(io=report_file, header=0, index_col=0)
         df = _drop_stats_rows(df)
 
         if len(df.columns) == 1:  # CD, IoU, NC -> single columns in multiple files
-            metrics_type = os.path.basename(report_file)
-            metrics_type = os.path.splitext(metrics_type)[0]
             df_name = df.columns[0]
             df_mean = df.mean(axis=0)[0]
             df_median = df.median(axis=0)[0]
@@ -559,8 +549,13 @@ def xslx_to_latex(xlsx_file: str, latex_file: str):
 def merge_comps(comp_list: typing.Sequence[str], comp_merged_out_file: str,
                 comp_merged_out_latex: str, methods_order: typing.Optional[list], float_format='%.2f'):
     import pandas as pd
-    dfs = [pd.read_excel(io=f, header=0, index_col=0) for f in comp_list]
-    datasets = [os.path.split(os.path.dirname(f))[1] for f in comp_list]
+    comp_list_existing = [f for f in comp_list if os.path.isfile(f)]
+    if len(comp_list_existing) == 0:
+        print('WARNING: No metrics found for: {}'.format(comp_list))
+        return
+    
+    dfs = [pd.read_excel(io=f, header=0, index_col=0) for f in comp_list_existing]
+    datasets = [os.path.split(os.path.dirname(f))[1] for f in comp_list_existing]
     dfs_with_ds = [df.assign(dataset=datasets[dfi]) for dfi, df in enumerate(dfs)]
     dfs_multiindex = [df.set_index(['dataset', df.index]).T for df in dfs_with_ds]
 
@@ -598,7 +593,12 @@ def merge_comps(comp_list: typing.Sequence[str], comp_merged_out_file: str,
 
     df_merged = _prettify_df(df_merged)
     df_merged.rename(columns={'index': 'Dataset'}, inplace=True)
+
+    from source.base.fs import make_dir_for_file
+    make_dir_for_file(comp_merged_out_file)
     df_merged.to_excel(comp_merged_out_file, float_format=float_format)
+    make_dir_for_file(comp_merged_out_latex)
+    # TODO: to_latex is deprecated, use df.style.to_latex instead
     df_merged.to_latex(buf=comp_merged_out_latex, float_format=float_format, na_rep='-', index=False, bold_rows=True,
                        column_format='l' + 'c' * (df_merged.shape[1] - 1), escape=False)
 

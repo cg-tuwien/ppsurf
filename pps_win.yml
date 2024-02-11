@@ -26,6 +26,8 @@ dependencies:
   - laspy>=2.5.1
   - pip>=22.3.1
   - tqdm
+  - pyglet=1
+  - rtree=1
   - pip:
     - tensorboard>=2.14.0
     - trimesh>=3.23.5

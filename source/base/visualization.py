@@ -26,6 +26,8 @@ def render_scene(mesh_file: str, rendering_file: str):
     import os
     import typing
     import trimesh
+    import pyglet
+    pyglet.options["headless"] = True
 
     if not os.path.isfile(mesh_file):
         print('Rendering failed, file not found: ' + mesh_file)
@@ -46,6 +48,8 @@ def render_scene(mesh_file: str, rendering_file: str):
         try:
             scene.set_camera(angles=(np.pi * 0.25, np.pi * 0.25, 0.0), distance=2.2, fov=(45, 45))
             img_bytes = scene.save_image(resolution=(1024, 1024), visible=True)
+        except pyglet.canvas.xlib.NoSuchDisplayException as _:
+            img_bytes = bytes([0])  # Pyglet can't render without real screen attached -> will always fail on servers by default
         except BaseException as E:
             print('ERROR rendering {} to {}: {}'.format(mesh_file, rendering_file, str(E)))
 

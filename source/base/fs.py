@@ -1,7 +1,57 @@
 import typing
-
-import numpy as np
 import os
+
+
+def create_activate_env(env_name: str):
+    import subprocess
+
+    # check if conda is installed
+    def _check_conda_installed(command: str):
+        try:
+            conda_output = subprocess.check_output([command, '-V']).decode('utf-8').strip()
+        except Exception as _:
+            return False
+        conda_output_regex = r'conda (\d+\.\d+\.\d+)'  # mamba and conda both output 'conda 23.3.1'
+        import re
+        conda_match = re.match(conda_output_regex, conda_output)
+        return conda_match is not None
+
+    if _check_conda_installed('mamba'):
+        conda_exe = 'mamba'
+    elif _check_conda_installed('conda'):
+        conda_exe = 'conda'
+    else:
+        raise ValueError('Conda not found')
+
+    # check if env already exists. example outputs:
+    # conda env list --json
+    # {
+    #   "envs": [
+    #     "C:\\miniforge",
+    #     "C:\\miniforge\\envs\\pps"
+    #   ]
+    # }
+    import json
+    env_list_str = subprocess.check_output([conda_exe, 'env', 'list', '--json']).decode('utf-8')
+    env_list_json = json.loads(env_list_str)
+    envs = env_list_json['envs']
+    envs_dirs = [os.path.split(env)[1] for env in envs]
+    first_run = env_name not in envs_dirs
+    if first_run:
+        import subprocess
+        on_windows = os.name == 'nt'
+        yml_file = '{}{}.yml'.format(env_name, '_win' if on_windows else '')
+        env_install_cmd = [conda_exe, 'env', 'create', '--file', yml_file]
+        print('Creating conda environment from {}\n{}'.format(yml_file, env_install_cmd))
+        subprocess.call(env_install_cmd)
+
+    # conda activate pps
+    subprocess.call([conda_exe, 'activate', env_name])
+
+    if first_run:
+        print('Downloading datasets')
+        subprocess.call(['python', 'source/datasets/download_abc_training.py'])
+        subprocess.call(['python', 'source/datasets/download_testsets.py'])
 
 
 def make_dir_for_file(file):
@@ -67,6 +117,7 @@ def call_necessary(file_in: typing.Union[str, typing.Sequence[str]], file_out: t
     if oldest_input_file_mtime >= youngest_output_file_mtime:
         if verbose:
             import time
+            import numpy as np
             input_file_mtime_arg_max = np.argmax(np.array([os.path.getmtime(f) for f in file_in]))
             output_file_mtime_arg_min = np.argmin(np.array([os.path.getmtime(f) for f in file_out]))
             input_file_mtime_max = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(oldest_input_file_mtime))

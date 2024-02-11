@@ -164,7 +164,8 @@ def export_mesh_and_refine_vertices_region_growing_v3(
             v = (v2 + v1) / 2
             verts[mask] = v
 
-            prog_bar.predict_progress_bar.set_postfix_str('{}, refine iter {}'.format(os.path.basename(pc_file_in), iter_id), refresh=True)
+            prog_bar.predict_progress_bar.set_postfix_str('{}, refine iter {}'.format(
+                os.path.basename(pc_file_in)[:16], iter_id), refresh=True)
     else:
         verts = verts * step + bmin_pad
 

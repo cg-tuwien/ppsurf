@@ -26,6 +26,8 @@ dependencies:
   - pillow
   - intel-openmp
   - tqdm
+  - pyglet=1
+  - rtree=1
   - pip:
     - tensorboard>=2.14
     - trimesh>=3.23

@@ -53,7 +53,7 @@ def _assemble_figure_data(figure_path, objects, datasets_path, results_path, met
     gt_in = [os.path.join(datasets_path, o[0], '03_meshes', o[1] + '.ply') for o in objects]
     gt_out = [os.path.join(figure_path, o[0], o[1], 'gt.ply') for o in objects]
 
-    pc_in = [os.path.join(datasets_path, o[0], '04_pts', o[1] + '.xyz.npy') for o in objects]
+    pc_in = [os.path.join(datasets_path, o[0], '04_pts_vis', o[1] + '.xyz.plys') for o in objects]
     pc_out = [os.path.join(figure_path, o[0], o[1], 'pc.ply') for o in objects]
 
     method_in = [[os.path.join(results_path, m, o[0], 'meshes', o[1] + '.ply') for m in methods] for o in objects]
