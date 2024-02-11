@@ -57,11 +57,11 @@ if __name__ == '__main__':
     # test
     model_names = [
         'pgr',
-        'neural_imls'
+        'neural_imls',
         'sap_optim',
         'sap',
         'p2s',
-        'poco Pts_gen_sub3k_iter10'
+        'poco Pts_gen_sub3k_iter10',
         'ppsurf_qpoints',
         'ppsurf_merge_sum',
         'ppsurf_vanilla_zeros_local',
