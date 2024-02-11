@@ -593,7 +593,11 @@ def merge_comps(comp_list: typing.Sequence[str], comp_merged_out_file: str,
 
     df_merged = _prettify_df(df_merged)
     df_merged.rename(columns={'index': 'Dataset'}, inplace=True)
+
+    from source.base.fs import make_dir_for_file
+    make_dir_for_file(comp_merged_out_file)
     df_merged.to_excel(comp_merged_out_file, float_format=float_format)
+    make_dir_for_file(comp_merged_out_latex)
     df_merged.to_latex(buf=comp_merged_out_latex, float_format=float_format, na_rep='-', index=False, bold_rows=True,
                        column_format='l' + 'c' * (df_merged.shape[1] - 1), escape=False)
 
