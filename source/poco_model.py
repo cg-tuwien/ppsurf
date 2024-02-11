@@ -291,7 +291,7 @@ class PocoModel(pl.LightningModule):
             gt_meshes = [os.path.join(gt_meshes_dir, '{}.ply'.format(vs)) for vs in shape_names]
             os.makedirs(results_dir, exist_ok=True)
             result_headers = [self.name]
-            result_file_templates = [os.path.join(results_dir, 'meshes/{}.ply')]
+            result_file_templates = [os.path.join(results_dir, 'meshes/{}.xyz.ply')]
             _ = evaluation.make_quantitative_comparison(
                 shape_names=shape_names, gt_mesh_files=gt_meshes,
                 result_headers=result_headers, result_file_templates=result_file_templates,
