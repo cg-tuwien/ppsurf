@@ -2,7 +2,7 @@ import os
 import zipfile
 import urllib.request
 
-source_url = r'https://users.cg.tuwien.ac.at/~perler/ppsurf/abc_train.zip'
+source_url = r'https://www.cg.tuwien.ac.at/research/publications/2024/erler_2024_ppsurf/erler_2024_ppsurf-trainset.zip'
 target_dir = os.path.dirname(os.path.abspath(__file__))
 target_file = os.path.join(target_dir, 'abc_train.zip')
 
