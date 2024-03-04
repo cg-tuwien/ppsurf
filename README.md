@@ -4,6 +4,8 @@ Combining Patches and Point Convolutions for Detailed Surface Reconstruction
 This is our implementation of [PPSurf](https://www.cg.tuwien.ac.at/research/publications/2024/erler_2024_ppsurf/),
 a network that estimates a signed distance function from point clouds. This SDF is turned into a mesh with Marching Cubes.
 
+Try our live system on [Huggingface](https://huggingface.co/spaces/perler/ppsurf).
+
 ![PPSurf teaser](images/teaser.png)
 
 This is our follow-up work for [Points2Surf](https://www.cg.tuwien.ac.at/research/publications/2020/erler-p2s/).
