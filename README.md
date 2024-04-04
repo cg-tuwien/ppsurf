@@ -21,9 +21,9 @@ We tested this repository on these systems:
 
 To manage the Python environments, we recommend using [Micromamba](https://github.com/mamba-org/mamba), 
 a much faster Anaconda alternative. 
-To install it, [follow this guide](https://mamba.readthedocs.io/en/latest/micromamba-installation.html#umamba-install). 
+To install it, [follow this guide](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html). 
 
-Alternatively, you can install the required packages with conda by simply replacing the 'mamba' calls with 'conda'.
+Alternatively, you can install the required packages with conda by simply replacing the 'micromamba' calls with 'conda'.
 Finally, you can use Pip with the requirements.txt.
 
 ``` bash
@@ -34,10 +34,10 @@ git clone https://github.com/ErlerPhilipp/ppsurf.git
 cd ppsurf
 
 # create the environment with the required packages
-mamba env create --file pps{_win}.yml
+micromamba env create --file pps{_win}.yml
 
 # activate the new environment
-mamba activate pps
+micromamba activate pps
 ```
 Use `pps_win.yml` for Windows and `pps.yml` for other OS.
 
@@ -281,7 +281,7 @@ Please don't ask for support on this messy last-minute code.
 
 On Windows, you might run into DLL load issues. If so, try re-installing intel-openmp:
 ``` bash
-mamba install -c defaults intel-openmp --force-reinstall
+micromamba install -c defaults intel-openmp --force-reinstall
 ```
 
 Conda/Mamba might run into a compile error while installing the environment. If so, try updating conda:
@@ -313,13 +313,14 @@ If you use our work, please cite our paper:
 author = {Erler, Philipp and Fuentes-Perez, Lizeth and Hermosilla, Pedro and Guerrero, Paul and Pajarola, Renato and Wimmer, Michael},
 title = {PPSurf: Combining Patches and Point Convolutions for Detailed Surface Reconstruction},
 journal = {Computer Graphics Forum},
-volume = {n/a},
-number = {n/a},
+volume = {43},
+number = {1},
 pages = {e15000},
 keywords = {modeling, surface reconstruction},
 doi = {https://doi.org/10.1111/cgf.15000},
 url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15000},
 eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.15000},
-abstract = {Abstract 3D surface reconstruction from point clouds is a key step in areas such as content creation, archaeology, digital cultural heritage and engineering. Current approaches either try to optimize a non-data-driven surface representation to fit the points, or learn a data-driven prior over the distribution of commonly occurring surfaces and how they correlate with potentially noisy point clouds. Data-driven methods enable robust handling of noise and typically either focus on a global or a local prior, which trade-off between robustness to noise on the global end and surface detail preservation on the local end. We propose PPSurf as a method that combines a global prior based on point convolutions and a local prior based on processing local point cloud patches. We show that this approach is robust to noise while recovering surface details more accurately than the current state-of-the-art. Our source code, pre-trained model and dataset are available at https://github.com/cg-tuwien/ppsurf.}
+abstract = {Abstract 3D surface reconstruction from point clouds is a key step in areas such as content creation, archaeology, digital cultural heritage and engineering. Current approaches either try to optimize a non-data-driven surface representation to fit the points, or learn a data-driven prior over the distribution of commonly occurring surfaces and how they correlate with potentially noisy point clouds. Data-driven methods enable robust handling of noise and typically either focus on a global or a local prior, which trade-off between robustness to noise on the global end and surface detail preservation on the local end. We propose PPSurf as a method that combines a global prior based on point convolutions and a local prior based on processing local point cloud patches. We show that this approach is robust to noise while recovering surface details more accurately than the current state-of-the-art. Our source code, pre-trained model and dataset are available at https://github.com/cg-tuwien/ppsurf.},
+year = {2024}
 }
 ```
