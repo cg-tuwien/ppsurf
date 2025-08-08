@@ -197,7 +197,7 @@ class OccupancyDataModule(LightningDataModule, ABC):
             pts = load_xyz(pts_file)
         elif file_ext in ['.stl', '.ply', '.obj', 'gltf', '.glb', '.dae', '.off', '.ctm', '.3dxml']:
             import trimesh
-            trimesh_obj: typing.Union[trimesh.Scene, trimesh.Trimesh] = trimesh.load_mesh(file_obj=pts_file)
+            trimesh_obj: typing.Union[trimesh.Scene, trimesh.Trimesh] = trimesh.load(file_obj=pts_file)
             if isinstance(trimesh_obj, trimesh.Scene):
                 mesh: trimesh.Trimesh = trimesh_obj.geometry.items()[0]
             elif isinstance(trimesh_obj, trimesh.Trimesh):
@@ -243,7 +243,7 @@ class OccupancyDataModule(LightningDataModule, ABC):
 
         # debug output
         from source.base.point_cloud import write_ply
-        write_ply('debug/pts_ms.ply', pts_np, normals_np)
+        # write_ply('debug/pts_ms.ply', pts_np, normals_np)
 
         shape_data = {'pts_ms': pts_np, 'normals_ms': normals_np, 'pc_file_in': pts_file}
         if return_kdtree:
