@@ -28,7 +28,7 @@ Finally, you can use Pip with the requirements.txt.
 
 ``` bash
 # clone this repo, a minimal dataset is included
-git clone https://github.com/ErlerPhilipp/ppsurf.git
+git clone https://github.com/cg-tuwien/ppsurf.git
 
 # go into the cloned dir
 cd ppsurf
