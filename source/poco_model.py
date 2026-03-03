@@ -10,7 +10,7 @@ from source.base.nn import FKAConvNetwork, batch_gather, count_parameters
 from source.base import fs
 from source.base.metrics import compare_predictions_binary_tensors
 
-from source.poco_data_loader import get_proj_ids, get_data_poco
+from source.poco_data_loader import get_proj_ids
 
 
 # Adapted from POCO: https://github.com/valeoai/POCO
@@ -182,75 +182,36 @@ class PocoModel(pl.LightningModule):
 
     def predict_step(self, batch: dict, batch_idx, dataloader_idx=0):
         from source.occupancy_data_module import get_results_dir, in_file_is_dataset
-
-        shape_data_poco = get_data_poco(batch_data=batch)
-        prog_bar = self.get_prog_bar()
+        from source.poco_utils import export_mesh_and_refine_vertices_region_growing_v3, generate_latent_representation
 
         if batch['pts_ms'].shape[0] > 1:
             raise NotImplementedError('batch size > 1 not supported')
-
+        
         pc_file_in = batch['pc_file_in'][0]
-        if in_file_is_dataset(self.in_file):
-            results_dir = get_results_dir(out_dir=self.results_dir, name=self.name, in_file=self.in_file)
-            out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in))
-        else:
-            # simple folder structure for single reconstruction
-            out_file_basename = os.path.basename(pc_file_in) + '.ply'
-            out_file_rec = os.path.join(self.results_dir, os.path.basename(pc_file_in), out_file_basename)
-        pts = shape_data_poco['pts'][0].transpose(0, 1)
+        
+        prog_bar = self.get_prog_bar()
+        shape_data_poco, latent = generate_latent_representation(
+            batch=batch, 
+            network=self.network,
+            network_latent_size=self.network_latent_size,
+            gen_subsample_manifold_iter=self.gen_subsample_manifold_iter,
+            gen_subsample_manifold=self.gen_subsample_manifold,
+            prog_bar=prog_bar
+            )
 
-        # create the latent storage
-        latent = torch.zeros((pts.shape[0], self.network_latent_size),
-                             dtype=torch.float, device=pts.device)
-        counts = torch.zeros((pts.shape[0],), dtype=torch.float, device=pts.device)
-
-        iteration = 0
-        for current_value in range(self.gen_subsample_manifold_iter):
-            while counts.min() < current_value + 1:
-                valid_ids = torch.argwhere(counts == current_value)[:, 0].clone().detach().long()
-
-                if pts.shape[0] >= self.gen_subsample_manifold:
-
-                    ids = torch.randperm(valid_ids.shape[0])[:self.gen_subsample_manifold]
-                    ids = valid_ids[ids]
-
-                    if ids.shape[0] < self.gen_subsample_manifold:
-                        ids = torch.cat(
-                            [ids, torch.randperm(pts.shape[0], device=pts.device)[
-                                  :self.gen_subsample_manifold - ids.shape[0]]],
-                            dim=0)
-                    assert (ids.shape[0] == self.gen_subsample_manifold)
-                else:
-                    ids = torch.arange(pts.shape[0])
-
-                data_partial = {'pts': shape_data_poco['pts'][0].transpose(1, 0)[ids].transpose(1, 0).unsqueeze(0)}
-                partial_latent = self.network.get_latent(data_partial)['latents']
-                latent[ids] += partial_latent[0].transpose(1, 0)
-                counts[ids] += 1
-
-                iteration += 1
-                prog_bar.predict_progress_bar.set_postfix_str('get_latent iter: {}'.format(iteration), refresh=True)
-
-        latent = latent / counts.unsqueeze(1)
-        latent = latent.transpose(1, 0).unsqueeze(0)
-        shape_data_poco['latents'] = latent
-        latent = shape_data_poco
-
-        from source.poco_utils import export_mesh_and_refine_vertices_region_growing_v3
         mesh = export_mesh_and_refine_vertices_region_growing_v3(
             network=self.network, latent=latent,
             pts_raw_ms=batch['pts_raw_ms'] if 'pts_raw_ms' in batch.keys() else None,
             resolution=self.gen_resolution_global,
+            input_points=shape_data_poco['pts'][0].cpu().numpy().transpose(1, 0),
             padding=1,
             mc_value=0,
             num_pts=self.rec_batch_size,
             num_pts_local=self.num_pts_local,
-            input_points=shape_data_poco['pts'][0].cpu().numpy().transpose(1, 0),
             refine_iter=self.gen_refine_iter,
             out_value=1,
             prog_bar=prog_bar,
             pc_file_in=pc_file_in,
-            # workers=self.workers,
         )
 
         if mesh is not None:
@@ -264,6 +225,14 @@ class PocoModel(pl.LightningModule):
                 bb_center, scale = get_points_normalization_info(pts=pts_np, padding_factor=self.padding_factor)
                 mesh.vertices = denormalize_points_with_info(pts=mesh.vertices, bb_center=bb_center, scale=scale)
 
+            if in_file_is_dataset(self.in_file):
+                results_dir = get_results_dir(out_dir=self.results_dir, name=self.name, in_file=self.in_file)
+                out_file_rec = os.path.join(results_dir, 'meshes', os.path.basename(pc_file_in))
+            else:
+                # simple folder structure for single reconstruction
+                out_file_basename = os.path.basename(pc_file_in) + '.ply'
+                out_file_rec = os.path.join(self.results_dir, os.path.basename(pc_file_in), out_file_basename)
+            
             # print(out_file_rec)
             fs.make_dir_for_file(out_file_rec)
             mesh.export(file_obj=out_file_rec)
@@ -271,6 +240,7 @@ class PocoModel(pl.LightningModule):
             print('No reconstruction for {}'.format(pc_file_in))
 
         return 0  # return something to suppress warning
+
 
     def on_predict_epoch_end(self):
         from source.base.profiling import get_now_str
@@ -298,6 +268,7 @@ class PocoModel(pl.LightningModule):
                 comp_output_dir=results_dir, num_processes=self.workers, num_samples=100000)
 
         print('{}: Evaluating {} finished'.format(get_now_str(), self.name))
+        
 
     def do_logging(self, loss_total, loss_components, log_type: str, output_names: list, metrics_dict: dict,
                    keys_to_log=frozenset({'abs_dist_rms', 'accuracy', 'precision', 'recall', 'f1_score'}),
