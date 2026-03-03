@@ -81,11 +81,11 @@ def get_pts_local_ps(latent: dict, pts_query: np.ndarray, kdtree, pts_raw_ms, nu
     pts_local_ps = torch.from_numpy(pts_local_ps_np).to(latent['pts_ms'].device).unsqueeze(0)
     return pts_local_ps
 
-def predict_from_latent(latent: dict, network, pts_query, num_pts_local, kdtree=None):
+def predict_from_latent(latent: dict, network, pts_query, pts_raw_ms, num_pts_local, kdtree):
     
     latent['pts_query'] = pts_query.unsqueeze(0)
     if num_pts_local is not None and num_pts_local > 0:
-        latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=latent.get('pts_raw_ms'), num_pts_local=num_pts_local)
+        latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
     
     occ_hat = network.from_latent(latent)
     # occ_hat = profile_from_latent(network.from_latent, _latent)
@@ -133,9 +133,10 @@ def export_mesh_and_refine_vertices_region_growing_v3(
         pts_raw_ms = pts_raw_ms[0].detach().cpu().numpy()  # expect batch size = 1
         kdtree = make_kdtree(pts=pts_raw_ms)
     else:
+        pts_raw_ms = None
         kdtree = None
 
-    volume = _create_volume(network, dilation_size, bmin_pad, latent, num_pts,
+    volume = _create_volume(network, dilation_size, bmin_pad, latent, pts_raw_ms, num_pts,
                             num_pts_local, out_value, padding, pc_file_in, prog_bar, pts_ids, resolution, step, kdtree=kdtree)
 
     # volume[np.isnan(volume)] = out_value
@@ -163,7 +164,7 @@ def export_mesh_and_refine_vertices_region_growing_v3(
     verts = np.asarray(mesh.vertices)
     faces = np.asarray(mesh.faces)
     if refine_iter > 0:
-        verts = refine_vertices(network, latent, num_pts, num_pts_local, refine_iter, prog_bar, pc_file_in, step, bmin_pad, get_pts_local_ps, volume, verts)
+        verts = refine_vertices(network, latent, num_pts, num_pts_local, pts_raw_ms, refine_iter, prog_bar, pc_file_in, step, bmin_pad, get_pts_local_ps, volume, verts, kdtree)
     else:
         verts = verts * step + bmin_pad
 
@@ -172,7 +173,7 @@ def export_mesh_and_refine_vertices_region_growing_v3(
     mesh = source.base.mesh.remove_small_connected_components(mesh=mesh, num_faces=6)
     return mesh
 
-def refine_vertices(network, latent, num_pts, num_pts_local, refine_iter, prog_bar, pc_file_in, step, bmin_pad, _get_pts_local_ps, volume, verts, kdtree=None):
+def refine_vertices(network, latent, num_pts, num_pts_local, pts_raw_ms, refine_iter, prog_bar, pc_file_in, step, bmin_pad, _get_pts_local_ps, volume, verts, kdtree):
     from tqdm import tqdm
     
     dirs = verts - np.floor(verts)
@@ -215,8 +216,8 @@ def refine_vertices(network, latent, num_pts, num_pts_local, refine_iter, prog_b
         for pts_query in tqdm(torch.split(pnts_all, num_pts, dim=0), ncols=100, disable=True):
             latent['pts_query'] = pts_query.unsqueeze(0)
             if num_pts_local is not None:
-                latent['pts_local_ps'] = _get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=latent.get('pts_raw_ms'), num_pts_local=num_pts_local)
-            preds.append(predict_from_latent(latent, network, pts_query, num_pts_local, kdtree))
+                latent['pts_local_ps'] = _get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
+            preds.append(predict_from_latent(latent, network, pts_query, pts_raw_ms, num_pts_local, kdtree))
         preds = np.concatenate(preds, axis=0)
 
         mask1 = (preds * preds1) > 0
@@ -236,7 +237,7 @@ def refine_vertices(network, latent, num_pts, num_pts_local, refine_iter, prog_b
     return verts
 
 
-def _create_volume(network, dilation_size, bmin_pad, latent, num_pts, num_pts_local,
+def _create_volume(network, dilation_size, bmin_pad, latent, pts_raw_ms, num_pts, num_pts_local,
                    out_value, padding, pc_file_in, prog_bar, pts_ids, resolution, step, kdtree=None):
 
     def _dilate_binary(arr: np.ndarray, pts_int: np.ndarray):
@@ -280,8 +281,8 @@ def _create_volume(network, dilation_size, bmin_pad, latent, num_pts, num_pts_lo
 
             latent['pts_query'] = pts_query.unsqueeze(0)
             if num_pts_local is not None:
-                latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=latent.get('pts_raw_ms'), num_pts_local=num_pts_local)
-            z.append(predict_from_latent(latent, network, pts_query, num_pts_local, kdtree))
+                latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
+            z.append(predict_from_latent(latent, network, pts_query, pts_raw_ms, num_pts_local, kdtree))
 
             prog_bar.predict_progress_bar.set_postfix_str(
                 '{}, occ_batch iter {}'.format(os.path.basename(pc_file_in), len(z)), refresh=True)
