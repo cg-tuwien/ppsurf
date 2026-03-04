@@ -2,6 +2,22 @@ from source.ppsurf_model import PPSurfModel
 from source.ppsurf_data_loader import PPSurfDataModule
 import pytorch_lightning as pl
 
+
+# test data for tracing (capture while stepping through the code)
+# encoding:
+# torch.save((batch, network, network_latent_size, gen_subsample_manifold_iter, gen_subsample_manifold, None), 'test_data/generate_latent_representation_in.pt')
+# torch.save(batch, 'test_data/get_data_poco_in.pt')
+# torch.save(shape_data_poco, 'test_data/get_data_poco_out.pt')
+# torch.save(data_partial, 'test_data/network_get_latent_in.pt')
+# torch.save(partial_latent, 'test_data/network_get_latent_out.pt')
+# torch.save((shape_data_poco, latent), 'test_data/generate_latent_representation_out.pt')
+# decoding:
+# torch.save((latent, network, pts_query, pts_raw_ms, num_pts_local, None), 'test_data/predict_from_latent_in.pt')
+# torch.save(latent, 'test_data/network_from_latent_in.pt')
+# torch.save(occ_hat, 'test_data/network_from_latent_out.pt')
+# torch.save(occ_hat, 'test_data/predict_from_latent_out.pt')
+
+
 #ckpt = torch.load("test.ckpt", map_location="cpu")
 #print(ckpt['state_dict'].keys())
 
