@@ -71,21 +71,21 @@ def generate_latent_representation(batch, network, network_latent_size, gen_subs
     latent = shape_data_poco
     return shape_data_poco, latent 
 
-def get_pts_local_ps(latent: dict, pts_query: np.ndarray, kdtree, pts_raw_ms, num_pts_local):
+def get_pts_local_ps(device, pts_query: np.ndarray, kdtree, pts_raw_ms, num_pts_local):
     from source.base.proximity import query_kdtree
     from source.ppsurf_data_loader import PPSurfDataset
     
     _, patch_pts_ids = query_kdtree(kdtree=kdtree, pts_query=pts_query, k=num_pts_local, sqr_dists=True)
     pts_local_ms = pts_raw_ms[patch_pts_ids.astype(np.int64)]
     pts_local_ps_np = PPSurfDataset.normalize_patches(pts_local_ms=pts_local_ms, pts_query_ms=pts_query)
-    pts_local_ps = torch.from_numpy(pts_local_ps_np).to(latent['pts_ms'].device).unsqueeze(0)
+    pts_local_ps = torch.from_numpy(pts_local_ps_np).to(device).unsqueeze(0)
     return pts_local_ps
 
 def predict_from_latent(latent: dict, network, pts_query, pts_raw_ms, num_pts_local, kdtree):
     
     latent['pts_query'] = pts_query.unsqueeze(0)
     if num_pts_local is not None and num_pts_local > 0:
-        latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
+        latent['pts_local_ps'] = get_pts_local_ps(device=latent['pts_ms'].device, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
     
     occ_hat = network.from_latent(latent)
     # occ_hat = profile_from_latent(network.from_latent, _latent)
@@ -281,7 +281,7 @@ def _create_volume(network, dilation_size, bmin_pad, latent, pts_raw_ms, num_pts
 
             latent['pts_query'] = pts_query.unsqueeze(0)
             if num_pts_local is not None:
-                latent['pts_local_ps'] = get_pts_local_ps(latent=latent, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
+                latent['pts_local_ps'] = get_pts_local_ps(device=latent['pts_ms'].device, pts_query=pts_query.detach().cpu().numpy(), kdtree=kdtree, pts_raw_ms=pts_raw_ms, num_pts_local=num_pts_local)
             z.append(predict_from_latent(latent, network, pts_query, pts_raw_ms, num_pts_local, kdtree))
 
             prog_bar.predict_progress_bar.set_postfix_str(
