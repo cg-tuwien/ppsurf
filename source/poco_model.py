@@ -322,7 +322,6 @@ class PocoNetwork(pl.LightningModule):
     def get_latent(self, data):
         latents = self.encoder.forward(data, spectral_only=False)
         data['latents'] = latents
-        data['proj_correction'] = None
         return data
 
     def from_latent(self, data: typing.Dict[str, torch.Tensor]):

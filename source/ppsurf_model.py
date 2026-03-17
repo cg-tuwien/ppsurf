@@ -76,11 +76,13 @@ class PPSurfNetwork(pl.LightningModule):
     def get_latent(self, data):
         latents = self.encoder.forward(data, spectral_only=False)
         data['latents'] = latents
-        data['proj_correction'] = None
         return data
 
     def from_latent(self, data: typing.Dict[str, torch.Tensor]):
-        feat_proj = self.projection.forward(data, has_proj_ids=False)
+        return self.from_latent_proj_ids(data, has_proj_ids=False)
+    
+    def from_latent_proj_ids(self, data: typing.Dict[str, torch.Tensor], has_proj_ids: bool):
+        feat_proj = self.projection.forward(data, has_proj_ids=has_proj_ids)
 
         # zero tensor for debug
         # feat_pn_shape = (data['proj_ids'].shape[0], data['proj_ids'].shape[2], data['proj_ids'].shape[1])
@@ -115,4 +117,3 @@ class PPSurfNetwork(pl.LightningModule):
         ret_data = ret_data.transpose(1, 2)
 
         return ret_data
-
